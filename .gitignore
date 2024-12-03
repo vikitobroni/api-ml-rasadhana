@@ -1,2 +1,2 @@
 .env
-./config/service-account-key.json
+/config/service-account-key.json

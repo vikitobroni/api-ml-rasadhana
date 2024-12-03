@@ -5,3 +5,7 @@ python-multipart
 numpy
 Pillow
 tensorflow
+google-cloud-storage
+httpx
+requests
+opencv-python

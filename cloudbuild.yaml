@@ -28,7 +28,7 @@ steps:
       - "managed"
       - "--allow-unauthenticated"
       - "--timeout"
-      - "300s"
+      - "600s"  # Memperpanjang timeout ke 600 detik
       - "--service-account"
       - "backend-service-account@rasadhana-app.iam.gserviceaccount.com"
       - "--set-secrets"
@@ -43,4 +43,4 @@ steps:
       - "PASSWORD_EMAIL=PASSWORD_EMAIL:latest"
 
 options:
-  logging: CLOUD_LOGGING_ONLY  # Logging only to Google Cloud Logging
+  logging: CLOUD_LOGGING_ONLY  # Logging hanya ke Google Cloud Logging

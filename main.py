@@ -4,6 +4,7 @@ import cv2
 import json
 import httpx
 import uvicorn
+import tempfile
 import numpy as np
 import tensorflow as tf
 from PIL import Image
@@ -20,33 +21,31 @@ os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 load_dotenv()
 
 # Mendapatkan variabel lingkungan dari .env
-GCLOUD_BUCKET_NAME = os.getenv("GCLOUD_BUCKET_NAME")
-GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+GCLOUD_BUCKET_NAME_ML = os.getenv("GCLOUD_BUCKET_NAME_ML")
+
+# uncomen jika ingin menggunakan service account
+# GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 # Nama kelas (sesuaikan dengan model Anda)
 class_names = ['caberawit', 'tomat', 'wortel', 'tempe', 'bawangputih', 'dagingsapi', 'kentang', 'dagingayam', 'bawang merah', 'telurayam']
-import tempfile
 
+
+# Inisialisasi client GCS tanpa file kredensial
+client = storage.Client()
+
+# Fungsi untuk memuat model dari GCS
 def load_model_from_gcs(bucket_name, model_path):
-    """Load model from Google Cloud Storage into memory and use a temporary file"""
     try:
-        client = storage.Client.from_service_account_json(GOOGLE_APPLICATION_CREDENTIALS)  # Load credentials
+        # client = storage.Client.from_service_account_json(GOOGLE_APPLICATION_CREDENTIALS)  # Load credentials jika ingin menggunakan service account
         bucket = client.get_bucket(bucket_name)
         blob = bucket.blob(model_path)
-        
-        # Download the model file into memory
         model_file = io.BytesIO()
         blob.download_to_file(model_file)
         model_file.seek(0)
-        
-        # Create a temporary file to save the model in a file system
         with tempfile.NamedTemporaryFile(delete=False, suffix='.h5') as tmp_file:
-            tmp_file.write(model_file.read())  # Write model to temporary file
+            tmp_file.write(model_file.read())
             tmp_file_path = tmp_file.name
-        
-        # Load the model from the temporary file
-        model = tf.keras.models.load_model(tmp_file_path)
-        return model
+        return tf.keras.models.load_model(tmp_file_path)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error loading model from GCS: {str(e)}")
 
@@ -54,7 +53,7 @@ def load_model_from_gcs(bucket_name, model_path):
 def load_recipe_from_gcs(bucket_name, recipe_path):
     """Load dataset resep dari Google Cloud Storage"""
     try:
-        client = storage.Client.from_service_account_json(GOOGLE_APPLICATION_CREDENTIALS)  # Load credentials
+        # client = storage.Client.from_service_account_json(GOOGLE_APPLICATION_CREDENTIALS)  # Load credentials jika ingin menggunakan service account
         bucket = client.get_bucket(bucket_name)
         blob = bucket.blob(recipe_path)
         
@@ -70,7 +69,7 @@ def load_recipe_from_gcs(bucket_name, recipe_path):
         raise HTTPException(status_code=500, detail=f"Error loading recipe dataset from GCS: {str(e)}")
 
 # Ganti dengan nama bucket dan path file yang sesuai di Google Cloud Storage
-bucket_name = GCLOUD_BUCKET_NAME
+bucket_name = GCLOUD_BUCKET_NAME_ML
 model_path = "model/model_food_classification2.h5"
 recipe_path = "dataset/cleaned_dataset.json"
 
@@ -157,8 +156,8 @@ async def get_latest_photo(user_id: str):
             response = await client.get(f"https://be-rasadhana-245949327575.asia-southeast2.run.app/photos/latest/{user_id.strip()}")
             if response.status_code == 200:
                 latest_photo_data = response.json()
-                # Debug output to check response format
-                print(f"Response from photo service: {latest_photo_data}")
+                # # Debug output to check response format
+                # print(f"Response from photo service: {latest_photo_data}")
                 
                 # Periksa apakah photoUrl ada di dalam respons 
                 if 'photoUrl' in latest_photo_data['data']:

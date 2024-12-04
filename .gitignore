@@ -1,5 +1,3 @@
 .env
 /config/service-account-key.json
 main-local.py
-model_food_classification2.h5
-cleaned_dataset.json

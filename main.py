@@ -1,10 +1,10 @@
+
 import os
 import io
 import cv2
 import json
 import httpx
 import uvicorn
-import tempfile
 import numpy as np
 import tensorflow as tf
 from PIL import Image
@@ -12,7 +12,6 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from tensorflow.keras.preprocessing import image
 from dotenv import load_dotenv
-from google.cloud import storage
 
 # Nonaktifkan opsi oneDNN (jika diperlukan)
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
@@ -20,62 +19,31 @@ os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 # Memuat variabel lingkungan dari file .env
 load_dotenv()
 
-# Mendapatkan variabel lingkungan dari .env
-GCLOUD_BUCKET_NAME_ML = os.getenv("GCLOUD_BUCKET_NAME_ML")
-
-# uncomen jika ingin menggunakan service account
-# GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-
 # Nama kelas (sesuaikan dengan model Anda)
 class_names = ['caberawit', 'tomat', 'wortel', 'tempe', 'bawangputih', 'dagingsapi', 'kentang', 'dagingayam', 'bawang merah', 'telurayam']
 
-
-# Inisialisasi client GCS tanpa file kredensial
-client = storage.Client()
-
-# Fungsi untuk memuat model dari GCS
-def load_model_from_gcs(bucket_name, model_path):
+# Fungsi untuk memuat model dari folder lokal
+def load_model_from_local(model_path):
+    """Load model dari file lokal"""
     try:
-        # client = storage.Client.from_service_account_json(GOOGLE_APPLICATION_CREDENTIALS)  # Load credentials jika ingin menggunakan service account
-        bucket = client.get_bucket(bucket_name)
-        blob = bucket.blob(model_path)
-        model_file = io.BytesIO()
-        blob.download_to_file(model_file)
-        model_file.seek(0)
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.h5') as tmp_file:
-            tmp_file.write(model_file.read())
-            tmp_file_path = tmp_file.name
-        return tf.keras.models.load_model(tmp_file_path)
+        model = tf.keras.models.load_model(model_path)
+        return model
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error loading model from GCS: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error loading model: {str(e)}")
 
-# Fungsi untuk memuat dataset resep dari Google Cloud Storage
-def load_recipe_from_gcs(bucket_name, recipe_path):
-    """Load dataset resep dari Google Cloud Storage"""
+# Fungsi untuk memuat dataset resep dari file lokal
+def load_recipe_from_local(recipe_path):
+    """Load dataset resep dari file lokal"""
     try:
-        # client = storage.Client.from_service_account_json(GOOGLE_APPLICATION_CREDENTIALS)  # Load credentials jika ingin menggunakan service account
-        bucket = client.get_bucket(bucket_name)
-        blob = bucket.blob(recipe_path)
-        
-        # Download dataset resep dan simpan ke memory
-        recipe_file = io.BytesIO()
-        blob.download_to_file(recipe_file)
-        recipe_file.seek(0)
-        
-        # Load dataset resep dari file dalam memory
-        recipe_data = json.load(recipe_file)
+        with open(recipe_path, 'r', encoding='utf-8') as file:
+            recipe_data = json.load(file)
         return recipe_data
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error loading recipe dataset from GCS: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error loading recipe dataset: {str(e)}")
 
-# Ganti dengan nama bucket dan path file yang sesuai di Google Cloud Storage
-bucket_name = GCLOUD_BUCKET_NAME_ML
-model_path = "model/model_food_classification2.h5"
-recipe_path = "dataset/cleaned_dataset.json"
-
-# Memuat model dan dataset dari Google Cloud Storage
-model = load_model_from_gcs(bucket_name, model_path)
-recipe_dataset = load_recipe_from_gcs(bucket_name, recipe_path)
+# Memuat model dan dataset dari folder lokal
+model = load_model_from_local("model_food_classification2.h5")
+recipe_dataset = load_recipe_from_local("cleaned_dataset.json")
 
 # Fungsi untuk memuat gambar dari URL secara asynchronous
 async def load_image_from_url(url: str):
@@ -156,8 +124,8 @@ async def get_latest_photo(user_id: str):
             response = await client.get(f"https://be-rasadhana-245949327575.asia-southeast2.run.app/photos/latest/{user_id.strip()}")
             if response.status_code == 200:
                 latest_photo_data = response.json()
-                # # Debug output to check response format
-                # print(f"Response from photo service: {latest_photo_data}")
+                # Debug output to check response format
+                print(f"Response from photo service: {latest_photo_data}")
                 
                 # Periksa apakah photoUrl ada di dalam respons 
                 if 'photoUrl' in latest_photo_data['data']:
@@ -170,5 +138,5 @@ async def get_latest_photo(user_id: str):
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8080))  # Mengambil PORT dari environment variable
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    port = os.getenv("PORT", 8080)
+    uvicorn.run(app, host='localhost', port=port)

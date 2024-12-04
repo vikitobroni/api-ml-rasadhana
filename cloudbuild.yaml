@@ -34,7 +34,7 @@ steps:
       - "--set-secrets"
       - "MONGO_URL=MONGO_URL:latest"
       - "--set-secrets"
-      - "GCLOUD_BUCKET_NAME=GCLOUD_BUCKET_NAME_ML:latest"
+      - "GCLOUD_BUCKET_NAME_ML=GCLOUD_BUCKET_NAME_ML:latest"
       - "--set-secrets"
       - "JWT_SECRET=JWT_SECRET:latest"
       - "--set-secrets"
@@ -42,5 +42,6 @@ steps:
       - "--set-secrets"
       - "PASSWORD_EMAIL=PASSWORD_EMAIL:latest"
 
-substitutions:
-  _REGION: "asia-southeast2"
+options:
+  logging: CLOUD_LOGGING_ONLY # Atau gunakan logging lain yang sesuai.
+  logs_bucket: "gs://rasadhana-app-logging"

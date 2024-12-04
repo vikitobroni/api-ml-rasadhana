@@ -9,3 +9,6 @@ google-cloud-storage
 httpx
 requests
 opencv-python
+python-dotenv
+google-auth
+h5py

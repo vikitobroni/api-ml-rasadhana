@@ -1,5 +1,7 @@
 .env
 /config/service-account-key.json
+main-local.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

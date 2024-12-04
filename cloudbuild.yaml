@@ -43,5 +43,4 @@ steps:
       - "PASSWORD_EMAIL=PASSWORD_EMAIL:latest"
 
 options:
-  logging: CLOUD_LOGGING_ONLY # Atau gunakan logging lain yang sesuai.
-  logs_bucket: "gs://rasadhana-app-logging"
+  logging: CLOUD_LOGGING_ONLY  # Logging only to Google Cloud Logging

@@ -1,31 +1,46 @@
 steps:
-  - name: 'gcr.io/cloud-builders/docker'
+  # Step 1: Build image
+  - name: "gcr.io/cloud-builders/docker"
     args:
-      - 'build'
-      - '-t'
-      - 'asia-southeast2-docker.pkg.dev/rasadhana-app/ml-rasadhana/ml-rasadhana-image:$BUILD_ID'
-      - '.'
+      - "build"
+      - "-t"
+      - "asia-southeast2-docker.pkg.dev/rasadhana-app/ml-rasadhana/ml-rasadhana-image:$BUILD_ID"
+      - "."
 
-  - name: 'gcr.io/cloud-builders/docker'
+  # Step 2: Push image to Artifact Registry
+  - name: "gcr.io/cloud-builders/docker"
     args:
-      - 'push'
-      - 'asia-southeast2-docker.pkg.dev/rasadhana-app/ml-rasadhana/ml-rasadhana-image:$BUILD_ID'
+      - "push"
+      - "asia-southeast2-docker.pkg.dev/rasadhana-app/ml-rasadhana/ml-rasadhana-image:$BUILD_ID"
 
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: 'gcloud'
+  # Step 3: Deploy to Cloud Run
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: "gcloud"
     args:
-      - 'run'
-      - 'deploy'
-      - 'ml-rasadhana' # Nama layanan untuk model ML
-      - '--image'
-      - 'asia-southeast2-docker.pkg.dev/rasadhana-app/ml-rasadhana/ml-rasadhana-image:$BUILD_ID'
-      - '--region'
-      - 'asia-southeast2'
-      - '--platform'
-      - 'managed'
-      - '--allow-unauthenticated'
-      - '--timeout'
-      - '300s'
+      - "run"
+      - "deploy"
+      - "ml-rasadhana"
+      - "--image"
+      - "asia-southeast2-docker.pkg.dev/rasadhana-app/ml-rasadhana/ml-rasadhana-image:$BUILD_ID"
+      - "--region"
+      - "asia-southeast2"
+      - "--platform"
+      - "managed"
+      - "--allow-unauthenticated"
+      - "--timeout"
+      - "300s"
+      - "--service-account"
+      - "backend-service-account@rasadhana-app.iam.gserviceaccount.com"
+      - "--set-secrets"
+      - "MONGO_URL=MONGO_URL:latest"
+      - "--set-secrets"
+      - "GCLOUD_BUCKET_NAME=GCLOUD_BUCKET_NAME_ML:latest"
+      - "--set-secrets"
+      - "JWT_SECRET=JWT_SECRET:latest"
+      - "--set-secrets"
+      - "EMAIL=EMAIL:latest"
+      - "--set-secrets"
+      - "PASSWORD_EMAIL=PASSWORD_EMAIL:latest"
 
-options:
-  logging: CLOUD_LOGGING_ONLY
+substitutions:
+  _REGION: "asia-southeast2"

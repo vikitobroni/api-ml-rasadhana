@@ -1,24 +1,26 @@
-# Gunakan image Python sebagai base
+# Gunakan image Python yang ringan
 FROM python:3.10-slim
 
-# Set work directory
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PORT=8080
+
+# Instal dependency sistem yang diperlukan
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Buat direktori kerja untuk aplikasi
 WORKDIR /app
 
-# Salin semua file model dan dataset
-COPY model_food_classification2.h5 tfidf_vectorizer_model.sav ingredient_vectors.sav cleaned_dataset.csv ./ 
-
-# Salin requirements.txt dan instal dependensi
-COPY requirements.txt .
+# Salin file requirements dan instal dependensi Python
+COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Salin semua file aplikasi ke dalam container
-COPY . .
-
-# Ekspos port 8080
-EXPOSE 8080
+# Salin seluruh kode aplikasi ke dalam container
+COPY . /app
 
 # Jalankan aplikasi menggunakan Gunicorn
 CMD ["gunicorn", "--bind", "0.0.0.0:8080", "main:app"]
-
-
-

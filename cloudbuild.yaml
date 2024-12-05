@@ -21,3 +21,6 @@ steps:
  
 images:
   - "gcr.io/rasadhana-app/ml-api-rasadhana"
+
+options:
+  logging: CLOUD_LOGGING_ONLY

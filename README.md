@@ -1,72 +1,203 @@
-# ML API Template 🚀
+# ML-Driven Recipe Recommendation Service
 
-Hello everyone! In this repository, I (Kaenova, a mentor in Bangkit 2023 program) will provide you with a head start on creating an ML API. Please read every line and comment carefully.
+This repository contains the code for a Flask-based machine learning service that performs food classification and recommends recipes. The service integrates image classification using TensorFlow and Natural Language Processing (NLP) techniques for ingredient-based recipe recommendation.
 
-I have included code examples for both text-based input and image-based input APIs. To run this server, make sure to install all the required libraries listed in `requirements.txt` by executing the command `pip install -r requirements.txt`. Then, use the command `python main.py` to run the server.
+## Features
 
-## Machine Learning Setup
+1. **Image Classification**
 
-Please prepare your model in either the `.h5` or saved model format. Place your model in the same folder as the `main.py` file. You will load your model in the code provided below. There are two options available: one for image-based input and another for text-based input. You need to complete either the `def predict_text` or `def predict_image` functions in `main.py` based on your model's input type.
+   - Classifies food images into categories such as `caberawit`, `tomat`, `wortel`, etc.
+   - Utilizes a pre-trained TensorFlow model.
 
-## Cloud Computing
+2. **Recipe Recommendation**
 
-You can check the endpoints used for the machine learning models in this API. The available endpoints are `/predict_text` for text-based input and `/predict_image` for image-based input. 
+   - Recommends recipes based on the classified food category.
+   - Uses a TF-IDF vectorizer and cosine similarity for ingredient matching.
 
-For the `/predict_text` endpoint, you need to send a JSON payload with the following structure:
-```json
-{
-  "text": "your text"
-}
+3. **Integration with External Services**
+
+   - Fetches the latest uploaded image for a user via an external API.
+
+4. **Image URL Support**
+   - Allows image input via a URL for classification.
+
+---
+
+## Installation
+
+### Prerequisites
+
+- Python 3.8+
+- Pip
+- Virtual environment (optional)
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/vikitobroni/api-ml-rasadhana.git
+cd ml-api-rasadhana
 ```
 
-For the `/predict_image` endpoint, you need to send a multipart-form with a field named "uploaded_file" containing the image file.
+### Set Up the Environment
 
-You can view the API documentation by accessing the `/docs` endpoint after running the server. Additionally, a Dockerfile is provided to facilitate modification and container image creation. By default, the server runs on port 8080, but you can customize the port by injecting the `PORT` environment variable.
-
-## Consultation
-
-If you need any assistance or would like to schedule a consultation with me, feel free to reach out to me on Discord (kaenova#2859). We can discuss your requirements and arrange a consultation time.
-
-Finally, I encourage you to share your capstone application with me! You can connect with me on the following platforms:
-
-- Instagram: [@kaenovama](https://www.instagram.com/kaenovama)
-- Twitter: [@kaenovama](https://twitter.com/kaenovama)
-- LinkedIn: [/in/kaenova](https://www.linkedin.com/in/kaenova)
-
-Now, you can start writing your deploying your model. Happy coding!
+1. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ---
 
 ## Usage
 
-To get started, follow these steps:
+### Run the Application
 
-1. Clone the repository:
-```sh
-git clone https://github.com/your-username/your-repository.git
-```
+1. Set the required environment variables:
 
-2. Install the required libraries:
-```sh
+   - `PORT`: The port number for the Flask application (default is 8080).
+
+2. Start the Flask server:
+
+   ```bash
+   python app.py
+   ```
+
+3. The application will be available at `http://your-ip:port`.
+
+### API Endpoints
+
+#### **`GET /`**
+
+- **Description**: Returns a welcome message.
+- **Response**:
+  ```json
+  {
+    "message": "Hello world from ML endpoint!"
+  }
+  ```
+
+#### **`POST /predict_latest_image/<user_id>`**
+
+- **Description**: Predicts the class of the latest uploaded image for the given user ID and provides recipe recommendations.
+- **Request**:
+  - `user_id`: The unique ID of the user.
+- **Response**:
+  ```json
+  {
+    "class": "class_name",
+    "confidence": confidence_score,
+    "recipes": [
+        {
+            "Title": "Recipe Title",
+            "Ingredients": "List of ingredients",
+            "Steps": "Cooking steps"
+        }
+    ]
+  }
+  ```
+- **Error Handling**: Returns an error message if the image or recipe processing fails.
+
+---
+
+## File Structure
+
+- **`main.py`**: Main Flask application.
+- **`model_food_classification2.h5`**: Pre-trained TensorFlow model for image classification.
+- **`tfidf_vectorizer_model.sav`**: TF-IDF vectorizer for NLP.
+- **`ingredient_vectors.sav`**: Precomputed ingredient vectors for recipe matching.
+- **`cleaned_dataset.csv`**: Dataset containing recipes and ingredients.
+
+---
+
+## How It Works
+
+### Image Classification
+
+1. The input image is resized to 224x224.
+2. The TensorFlow model predicts the food category.
+3. Outputs the predicted class and confidence score.
+
+### Recipe Recommendation
+
+1. The predicted class is used as input for the TF-IDF vectorizer.
+2. Cosine similarity is computed between the input and precomputed ingredient vectors.
+3. The top-N matching recipes are retrieved from the dataset.
+
+### External Image Service
+
+- The `/predict_latest_image/<user_id>` endpoint retrieves the latest image URL for a given user ID from an external API.
+- The image is downloaded and processed for classification.
+
+---
+
+## Dependencies
+
+- Flask
+- tensorflow
+- joblib
+- scikit-learn
+- opencv-python
+- pandas
+- numpy
+- requests
+- pillow
+- gunicorn
+
+Install dependencies using:
+
+```bash
 pip install -r requirements.txt
-```
-
-3. Prepare your machine learning model:
-- If you have an `.h5` model file, place it in the same folder as `main.py`.
-- If you have a saved model format, place it in a folder named `my_model_folder` in the same directory as `main.py`.
-
-4. Read the `main.py` file carefully
-
-5. Complete the `predict_text` or `predict_image` function in `main.py`
-
-6. Run the server:
-```sh
-python main.py
 ```
 
 ---
 
-## One More Thing
+## Deployment
 
-One thing i should mention. Many people still asking **Who should deploy the model? Is it CC or is it ML?**
-> Both parties need to collaborate. Cloud Computing (CC) may not be familiar with the contents of your .h5 file, and Machine Learning (ML) may not be familiar with HTTP POST and GET requests. Therefore, it is the responsibility of both parties to deploy the model.
+### Using Docker
+
+1. Build the Docker image local:
+   ```bash
+   docker build -t ml-api-rasadhana .
+   ```
+
+2. Run the container:
+   ```bash
+   docker run -p 8080:8080 ml-api-rasadhana
+   ```
+
+### Using GCP Cloud Run
+
+1. create artifact regristry:
+   ```bash
+   gcloud artifacts repositories create ml-api-rasadhana --repository-format=docker --location=asia-southeast2 --async
+   ```
+
+2. create builds:
+   ```bash
+   gcloud builds submit --tag asia-southeast2-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT}/ml-api-rasadhana/rasadhana:1.0.0
+   ```
+
+3. deploy ke cloud run:
+   ```bash
+   gcloud run deploy --image asia-southeast2-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT}/ml-api-rasadhana/rasadhana:1.0.0
+   ```
+
+---
+
+## Contributing
+
+1. Fork the repository.
+2. Create a feature branch:
+   ```bash
+   git checkout -b feature-name
+   ```
+3. Commit your changes:
+   ```bash
+   git commit -m "Add some feature"
+   ```
+4. Push to the branch:
+   ```bash
+   git push origin feature-name
+   ```
+5. Open a pull request.
+
+---

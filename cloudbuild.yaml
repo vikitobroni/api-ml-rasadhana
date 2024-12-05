@@ -23,7 +23,7 @@ steps:
       - "--image"
       - "asia-southeast2-docker.pkg.dev/rasadhana-app/ml-rasadhana/ml-rasadhana-image:$BUILD_ID"
       - "--region"
-      - "$_REGION"
+      - "asia-southeast2"
       - "--platform"
       - "managed"
       - "--allow-unauthenticated"

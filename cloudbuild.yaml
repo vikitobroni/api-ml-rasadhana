@@ -1,34 +1,23 @@
 steps:
-  # Step 1: Build image
+  # Build Docker image
   - name: "gcr.io/cloud-builders/docker"
-    args:
-      - "build"
-      - "-t"
-      - "asia-southeast2-docker.pkg.dev/rasadhana-app/ml-rasadhana/ml-rasadhana-image:$BUILD_ID"
-      - "."
+    args: ["build", "-t", "gcr.io/rasadhana-app/ml-api-rasadhana", "."]
 
-  # Step 2: Push image to Artifact Registry
+  # Push Docker image ke Container Registry
   - name: "gcr.io/cloud-builders/docker"
-    args:
-      - "push"
-      - "asia-southeast2-docker.pkg.dev/rasadhana-app/ml-rasadhana/ml-rasadhana-image:$BUILD_ID"
+    args: ["push", "gcr.io/rasadhana-app/ml-api-rasadhana"]
 
-  # Step 3: Deploy to Cloud Run
+  # Deploy ke Cloud Run
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
-    entrypoint: "gcloud"
+    entrypoint: gcloud
     args:
       - "run"
       - "deploy"
-      - "ml-rasadhana"
-      - "--image"
-      - "asia-southeast2-docker.pkg.dev/rasadhana-app/ml-rasadhana/ml-rasadhana-image:$BUILD_ID"
-      - "--region"
-      - "asia-southeast2"
-      - "--platform"
-      - "managed"
+      - "ml-api-rasadhana"
+      - "--image=gcr.io/rasadhana-app/ml-api-rasadhana"
+      - "--platform=managed"
+      - "--region=asia-southeast2"
       - "--allow-unauthenticated"
-      - "--timeout"
-      - "600s"
-
-options:
-  logging: CLOUD_LOGGING_ONLY # Logging hanya ke Google Cloud Logging
+ 
+images:
+  - "gcr.io/rasadhana-app/ml-api-rasadhana"

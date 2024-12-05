@@ -15,4 +15,7 @@ COPY . .
 EXPOSE 8080
 
 # Jalankan aplikasi Flask
-CMD ["python", "app.py"]
+CMD ["python", "main.py"]
+
+
+

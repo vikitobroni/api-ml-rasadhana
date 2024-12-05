@@ -58,7 +58,7 @@ cd ml-api-rasadhana
 2. Start the Flask server:
 
    ```bash
-   python app.py
+   python main.py
    ```
 
 3. The application will be available at `http://your-ip:port`.

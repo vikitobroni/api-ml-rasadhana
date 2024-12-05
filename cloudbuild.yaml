@@ -1,26 +1,31 @@
 steps:
-  # Build Docker image
   - name: "gcr.io/cloud-builders/docker"
-    args: ["build", "-t", "gcr.io/rasadhana-app/ml-api-rasadhana", "."]
+    args:
+      - "build"
+      - "-t"
+      - "asia-southeast2-docker.pkg.dev/rasadhana-app/ml-rasadhana/ml-rasadhana-image:1.0.0"
+      - "."
 
-  # Push Docker image ke Container Registry
   - name: "gcr.io/cloud-builders/docker"
-    args: ["push", "gcr.io/rasadhana-app/ml-api-rasadhana"]
+    args:
+      - "push"
+      - "asia-southeast2-docker.pkg.dev/rasadhana-app/ml-rasadhana/ml-rasadhana-image:1.0.0"
 
-  # Deploy ke Cloud Run
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
-    entrypoint: gcloud
+    entrypoint: "gcloud"
     args:
       - "run"
       - "deploy"
-      - "ml-api-rasadhana"
-      - "--image=gcr.io/rasadhana-app/ml-api-rasadhana"
-      - "--platform=managed"
-      - "--region=asia-southeast2"
+      - "ml-rasadhana"
+      - "--image"
+      - "asia-southeast2-docker.pkg.dev/rasadhana-app/ml-rasadhana/ml-rasadhana-image:1.0.0"
+      - "--region"
+      - "asia-southeast2"
+      - "--platform"
+      - "managed"
       - "--allow-unauthenticated"
- 
-images:
-  - "gcr.io/rasadhana-app/ml-api-rasadhana"
+      - "--timeout"
+      - "300s"
 
 options:
   logging: CLOUD_LOGGING_ONLY

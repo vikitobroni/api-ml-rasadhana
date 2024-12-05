@@ -12,3 +12,4 @@ opencv-python
 python-dotenv
 google-auth
 h5py
+scikit-learn

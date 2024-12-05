@@ -1,13 +1,15 @@
-
 import os
 import io
 import cv2
 import json
 import httpx
+import joblib
+import pandas as pd
 import uvicorn
 import numpy as np
 import tensorflow as tf
 from PIL import Image
+from sklearn.metrics.pairwise import cosine_similarity
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from tensorflow.keras.preprocessing import image
@@ -19,31 +21,25 @@ os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 # Memuat variabel lingkungan dari file .env
 load_dotenv()
 
-# Nama kelas (sesuaikan dengan model Anda)
+# Nama kelas
 class_names = ['caberawit', 'tomat', 'wortel', 'tempe', 'bawangputih', 'dagingsapi', 'kentang', 'dagingayam', 'bawang merah', 'telurayam']
 
-# Fungsi untuk memuat model dari folder lokal
-def load_model_from_local(model_path):
-    """Load model dari file lokal"""
-    try:
-        model = tf.keras.models.load_model(model_path)
-        return model
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error loading model: {str(e)}")
+# Memuat model klasifikasi gambar
+model = tf.keras.models.load_model("model_food_classification2.h5")
 
-# Fungsi untuk memuat dataset resep dari file lokal
-def load_recipe_from_local(recipe_path):
-    """Load dataset resep dari file lokal"""
-    try:
-        with open(recipe_path, 'r', encoding='utf-8') as file:
-            recipe_data = json.load(file)
-        return recipe_data
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error loading recipe dataset: {str(e)}")
+# Memuat model TF-IDF dan dataset untuk NLP
+vectorizer = joblib.load('tfidf_vectorizer_model.sav')
+ingredient_vectors = joblib.load('ingredient_vectors.sav')
+data = pd.read_csv('cleaned_dataset.csv')
 
-# Memuat model dan dataset dari folder lokal
-model = load_model_from_local("model_food_classification2.h5")
-recipe_dataset = load_recipe_from_local("cleaned_dataset.json")
+# Fungsi untuk merekomendasikan resep
+
+def recommend_recipes(input_ingredients, top_n=8):
+    input_vector = vectorizer.transform([input_ingredients])
+    cosine_similarities = cosine_similarity(input_vector, ingredient_vectors).flatten()
+    related_indices = cosine_similarities.argsort()[-top_n:][::-1]
+    recommendations = data.iloc[related_indices]
+    return recommendations[['Title', 'Ingredients', 'Steps']]
 
 # Fungsi untuk memuat gambar dari URL secara asynchronous
 async def load_image_from_url(url: str):
@@ -57,7 +53,7 @@ async def load_image_from_url(url: str):
         else:
             raise HTTPException(status_code=404, detail="Gambar tidak ditemukan di URL")
 
-# Fungsi untuk mengubah gambar menjadi array numpy dan melakukan preprocessing
+# Fungsi untuk memprediksi kelas dari gambar
 def predict_single_image(model, img_data, target_size=(224, 224)):
     img_resized = cv2.resize(img_data, target_size)
     img_array = image.img_to_array(img_resized) / 255.0
@@ -68,20 +64,6 @@ def predict_single_image(model, img_data, target_size=(224, 224)):
     confidence = predictions[0][predicted_class]
 
     return predicted_class, confidence
-
-# Fungsi untuk mendapatkan resep berdasarkan bahan yang diprediksi
-def get_recipe_by_ingredient(ingredient):
-    """Mencari resep berdasarkan bahan yang diprediksi"""
-    for recipe in recipe_dataset:
-        # Cek apakah ingredient yang diprediksi ada dalam list Ingredients
-        if ingredient.lower() in recipe["Ingredients"].lower():
-            return {
-                "Title": recipe["Title"],
-                "Ingredients": recipe["Ingredients"],
-                "Steps": recipe["Steps"],
-                "URL": recipe["URL"]
-            }
-    return {"message": "Resep tidak ditemukan."}
 
 # Inisialisasi aplikasi FastAPI
 app = FastAPI()
@@ -95,7 +77,7 @@ async def predict_latest_image(user_id: str):
     try:
         # Bersihkan `user_id` dari karakter whitespace atau newline
         user_id = user_id.strip()
-        
+
         # Ambil foto terbaru berdasarkan userId
         latest_photo_data = await get_latest_photo(user_id)
         photo_url = latest_photo_data['photoUrl']  # Pastikan key 'photoUrl' ada
@@ -110,10 +92,13 @@ async def predict_latest_image(user_id: str):
         # Konversi confidence dari float32 ke float
         confidence = float(confidence)
 
-        # Dapatkan resep berdasarkan kelas yang diprediksi
-        recipe = get_recipe_by_ingredient(class_name)
+        # Gunakan NLP untuk merekomendasikan resep berdasarkan bahan yang diprediksi
+        recommended_recipes = recommend_recipes(class_name)
+        
+        # Format hasil rekomendasi
+        recipes = recommended_recipes.to_dict(orient='records')
 
-        return JSONResponse(content={"class": class_name, "confidence": confidence * 100, "recipe": recipe})
+        return JSONResponse(content={"class": class_name, "confidence": confidence * 100, "recipes": recipes})
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
@@ -126,7 +111,7 @@ async def get_latest_photo(user_id: str):
                 latest_photo_data = response.json()
                 # Debug output to check response format
                 print(f"Response from photo service: {latest_photo_data}")
-                
+
                 # Periksa apakah photoUrl ada di dalam respons 
                 if 'photoUrl' in latest_photo_data['data']:
                     return latest_photo_data['data']  # Mengambil data foto dari response

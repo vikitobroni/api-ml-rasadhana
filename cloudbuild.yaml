@@ -23,24 +23,12 @@ steps:
       - "--image"
       - "asia-southeast2-docker.pkg.dev/rasadhana-app/ml-rasadhana/ml-rasadhana-image:$BUILD_ID"
       - "--region"
-      - "asia-southeast2"
+      - "$_REGION"
       - "--platform"
       - "managed"
       - "--allow-unauthenticated"
       - "--timeout"
-      - "600s"  # Memperpanjang timeout ke 600 detik
-      - "--service-account"
-      - "backend-service-account@rasadhana-app.iam.gserviceaccount.com"
-      - "--set-secrets"
-      - "MONGO_URL=MONGO_URL:latest"
-      - "--set-secrets"
-      - "GCLOUD_BUCKET_NAME_ML=GCLOUD_BUCKET_NAME_ML:latest"
-      - "--set-secrets"
-      - "JWT_SECRET=JWT_SECRET:latest"
-      - "--set-secrets"
-      - "EMAIL=EMAIL:latest"
-      - "--set-secrets"
-      - "PASSWORD_EMAIL=PASSWORD_EMAIL:latest"
+      - "600s"
 
 options:
-  logging: CLOUD_LOGGING_ONLY  # Logging hanya ke Google Cloud Logging
+  logging: CLOUD_LOGGING_ONLY # Logging hanya ke Google Cloud Logging

@@ -144,7 +144,7 @@ def predict_latest_image(user_id):
         # Simpan riwayat ke MongoDB
         save_recipe_history(user_id, class_name, confidence, recipes)
 
-        return jsonify({"class": class_name, "confidence": confidence * 100, "recipes": recipes})
+        return jsonify({"class": class_name, "confidence": confidence * 100, "recipes": recipes}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

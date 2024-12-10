@@ -102,13 +102,12 @@ cd ml-api-rasadhana
   ```json
   {
     "userId": "user_id",
-    "recipe": [
+    "recipe":
       {
         "Title": "Recipe Title",
         "Ingredients": "List of ingredients",
         "Steps": "Cooking steps"
       }
-    ]
   }
   ```
 

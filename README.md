@@ -94,6 +94,56 @@ cd ml-api-rasadhana
     ]
   }
   ```
+
+#### **`POST /bookmark_recipe`**
+
+- **Description**: Adds a recipe to the user's bookmarks.
+- **Request**:
+  ```json
+  {
+    "userId": "user_id",
+    "recipe": [
+      {
+        "Title": "Recipe Title",
+        "Ingredients": "List of ingredients",
+        "Steps": "Cooking steps"
+      }
+    ]
+  }
+  ```
+
+#### **`GET /get_bookmarks/<user_id>`**
+
+- **Description**: Retrieves all bookmarks for a specific user.
+- **Response**:
+
+  ```json
+  {
+    "bookmarks": [
+      {
+        "userId": "user_id",
+        "recipe": {
+          "Title": "Recipe Title",
+          "Ingredients": "List of ingredients",
+          "Steps": "Cooking steps"
+        }
+      }
+    ]
+  }
+  ```
+
+#### **`DELETE /delete_bookmark`**
+
+- **Description**: Deletes a specific recipe bookmark for a user.
+- **Request**:
+
+  ```json
+  {
+    "userId": "user_id",
+    "recipeTitle": "Recipe Title"
+  }
+  ```
+
 - **Error Handling**: Returns an error message if the image or recipe processing fails.
 
 ---
@@ -155,6 +205,7 @@ pip install -r requirements.txt
 ### Using Docker
 
 1. Build the Docker image local:
+
    ```bash
    docker build -t ml-api-rasadhana .
    ```
@@ -167,11 +218,13 @@ pip install -r requirements.txt
 ### Using GCP Cloud Run
 
 1. create artifact regristry:
+
    ```bash
    gcloud artifacts repositories create ml-api-rasadhana --repository-format=docker --location=asia-southeast2 --async
    ```
 
 2. create builds:
+
    ```bash
    gcloud builds submit --tag asia-southeast2-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT}/ml-api-rasadhana/rasadhana:1.0.0
    ```

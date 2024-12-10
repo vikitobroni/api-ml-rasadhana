@@ -186,12 +186,19 @@ def bookmark_recipe():
         }
 
         # Simpan data ke koleksi Bookmarks
-        bookmark_collection.insert_one(bookmark_data)
-        print("Resep berhasil ditambahkan ke bookmark.")
+        result = bookmark_collection.insert_one(bookmark_data)
 
-        return jsonify({"message": "Resep berhasil ditambahkan ke bookmark.", "bookmark": bookmark_data}), 200
+        # Tambahkan _id hasil insert ke bookmark_data
+        bookmark_data["_id"] = str(result.inserted_id)  # Konversi ObjectId ke string
+
+        print("Resep berhasil ditambahkan ke bookmark.")
+        return jsonify({
+            "message": "Resep berhasil ditambahkan ke bookmark.",
+            "bookmark": bookmark_data
+        }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 # Endpoint untuk mengambil semua bookmark berdasarkan userId
 @app.route("/get_bookmarks/<user_id>", methods=["GET"])

@@ -179,6 +179,11 @@ def bookmark_recipe():
         if not user_id or not recipe:
             return jsonify({"error": "userId dan recipe harus disediakan."}), 400
 
+        # Cek apakah bookmark dengan userId dan recipe yang sama sudah ada
+        existing_bookmark = bookmark_collection.find_one({"userId": user_id, "recipe.Title": recipe.get("Title")})
+        if existing_bookmark:
+            return jsonify({"message": "Resep sudah ditambahkan ke bookmark sebelumnya."}), 409
+
         # Tambahkan informasi bookmark ke database
         bookmark_data = {
             "userId": user_id,
@@ -198,7 +203,6 @@ def bookmark_recipe():
         }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 # Endpoint untuk mengambil semua bookmark berdasarkan userId
 @app.route("/get_bookmarks/<user_id>", methods=["GET"])

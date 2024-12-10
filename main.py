@@ -206,6 +206,29 @@ def get_bookmarks(user_id):
         return jsonify({"bookmarks": bookmarks}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+# Endpoint untuk menghapus bookmark berdasarkan userId dan informasi resep
+@app.route("/delete_bookmark", methods=["DELETE"])
+def delete_bookmark():
+    try:
+        # Ambil data dari request body
+        data = request.json
+        user_id = data.get("userId")
+        recipe_title = data.get("recipeTitle")  # Hanya perlu judul untuk identifikasi resep
+
+        # Validasi input
+        if not user_id or not recipe_title:
+            return jsonify({"error": "userId dan recipeTitle harus disediakan."}), 400
+
+        # Cari dan hapus bookmark berdasarkan userId dan recipeTitle
+        delete_result = bookmark_collection.delete_one({"userId": user_id, "recipe.Title": recipe_title})
+
+        if delete_result.deleted_count == 0:
+            return jsonify({"message": "Bookmark tidak ditemukan atau tidak berhasil dihapus."}), 404
+
+        return jsonify({"message": "Bookmark berhasil dihapus."}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8080))

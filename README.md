@@ -1,4 +1,4 @@
-# ML-Driven Recipe Recommendation Service
+# Rasadhana Backend API ML Integration
 
 This repository contains the code for a Flask-based machine learning service that performs food classification and recommends recipes. The service integrates image classification using TensorFlow and Natural Language Processing (NLP) techniques for ingredient-based recipe recommendation.
 
